@@ -2,9 +2,9 @@
   "started_at": "2026-03-07T10:00:00",
   "total_chapters": 20,
   "chapters": {
-    "00": { "status": "committing", "step": "committing", "completed_at": null },
-    "01": { "status": "writing", "step": "writing", "completed_at": null },
-    "02": { "status": "pending", "step": null, "completed_at": null },
+    "00": { "status": "done", "step": "done", "completed_at": "2026-03-07T10:30:00" },
+    "01": { "status": "done", "step": "done", "completed_at": "2026-03-07T11:00:00" },
+    "02": { "status": "writing_done", "step": "writing_done", "completed_at": null },
     "03": { "status": "pending", "step": null, "completed_at": null },
     "04": { "status": "pending", "step": null, "completed_at": null },
     "05": { "status": "pending", "step": null, "completed_at": null },
