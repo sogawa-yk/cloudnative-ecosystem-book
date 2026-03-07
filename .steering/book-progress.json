@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-03-07T10:00:00",
+  "total_chapters": 20,
+  "chapters": {
+    "00": { "status": "committing", "step": "committing", "completed_at": null },
+    "01": { "status": "writing", "step": "writing", "completed_at": null },
+    "02": { "status": "pending", "step": null, "completed_at": null },
+    "03": { "status": "pending", "step": null, "completed_at": null },
+    "04": { "status": "pending", "step": null, "completed_at": null },
+    "05": { "status": "pending", "step": null, "completed_at": null },
+    "06": { "status": "pending", "step": null, "completed_at": null },
+    "07": { "status": "pending", "step": null, "completed_at": null },
+    "08": { "status": "pending", "step": null, "completed_at": null },
+    "09": { "status": "pending", "step": null, "completed_at": null },
+    "10": { "status": "pending", "step": null, "completed_at": null },
+    "11": { "status": "pending", "step": null, "completed_at": null },
+    "12": { "status": "pending", "step": null, "completed_at": null },
+    "13": { "status": "pending", "step": null, "completed_at": null },
+    "14": { "status": "pending", "step": null, "completed_at": null },
+    "15": { "status": "pending", "step": null, "completed_at": null },
+    "16": { "status": "pending", "step": null, "completed_at": null },
+    "17": { "status": "pending", "step": null, "completed_at": null },
+    "18": { "status": "pending", "step": null, "completed_at": null },
+    "19": { "status": "pending", "step": null, "completed_at": null }
+  }
+}
