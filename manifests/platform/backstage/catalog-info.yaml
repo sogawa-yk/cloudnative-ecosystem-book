@@ -1,0 +1,93 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: book-app
+  description: Cloud Native Ecosystem Book sample application
+  annotations:
+    github.com/project-slug: cloudnative-book/cloudnative-ecosystem-book
+    backstage.io/techdocs-ref: dir:.
+    argocd/app-name: book-app
+    prometheus.io/rule: |
+      sum(rate(http_requests_total{namespace="book-app"}[5m])) by (service)
+  tags:
+    - python
+    - kubernetes
+    - cloud-native
+  links:
+    - url: https://book-app.example.com
+      title: Production
+      icon: web
+spec:
+  type: service
+  lifecycle: production
+  owner: team-cloudnative
+  system: book-app-system
+  providesApis:
+    - book-app-api
+  dependsOn:
+    - component:product-service
+    - component:order-service
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: product-service
+  description: Product catalog microservice
+  tags:
+    - python
+    - microservice
+spec:
+  type: service
+  lifecycle: production
+  owner: team-cloudnative
+  system: book-app-system
+  dependsOn:
+    - resource:postgres
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: order-service
+  description: Order management microservice
+  tags:
+    - python
+    - microservice
+spec:
+  type: service
+  lifecycle: production
+  owner: team-cloudnative
+  system: book-app-system
+  dependsOn:
+    - resource:postgres
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: book-app-system
+  description: Cloud Native Ecosystem Book sample application system
+spec:
+  owner: team-cloudnative
+  domain: cloud-native-education
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgres
+  description: PostgreSQL database for book-app services
+spec:
+  type: database
+  owner: team-cloudnative
+  system: book-app-system
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: book-app-api
+  description: Book App REST API
+spec:
+  type: openapi
+  lifecycle: production
+  owner: team-cloudnative
+  system: book-app-system
+  definition:
+    $text: https://github.com/cloudnative-book/cloudnative-ecosystem-book/blob/main/sample-app/api-gateway/openapi.yaml

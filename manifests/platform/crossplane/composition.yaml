@@ -1,0 +1,199 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: microservice-composition
+  labels:
+    platform.book-app.io/provider: kubernetes
+spec:
+  compositeTypeRef:
+    apiVersion: platform.book-app.io/v1alpha1
+    kind: XMicroservice
+  mode: Pipeline
+  pipeline:
+    - step: create-namespace
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: namespace
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: Namespace
+                    metadata:
+                      name: book-app
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.metadata.labels["app.kubernetes.io/name"]
+
+    - step: create-deployment
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: deployment
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    metadata:
+                      namespace: book-app
+                    spec:
+                      selector:
+                        matchLabels: {}
+                      template:
+                        metadata:
+                          labels: {}
+                        spec:
+                          containers:
+                            - name: app
+                              ports:
+                                - containerPort: 8080
+                              resources:
+                                requests:
+                                  cpu: 100m
+                                  memory: 128Mi
+                                limits:
+                                  cpu: 500m
+                                  memory: 256Mi
+                              readinessProbe:
+                                httpGet:
+                                  path: /health
+                                  port: 8080
+                                initialDelaySeconds: 5
+                                periodSeconds: 10
+                              livenessProbe:
+                                httpGet:
+                                  path: /health
+                                  port: 8080
+                                initialDelaySeconds: 15
+                                periodSeconds: 20
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.metadata.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.spec.selector.matchLabels["app"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.spec.template.metadata.labels["app"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.image
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].image
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.replicas
+                toFieldPath: spec.forProvider.manifest.spec.replicas
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.port
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].ports[0].containerPort
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.resources.cpuRequest
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].resources.requests.cpu
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.resources.memoryRequest
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].resources.requests.memory
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.resources.cpuLimit
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].resources.limits.cpu
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.resources.memoryLimit
+                toFieldPath: spec.forProvider.manifest.spec.template.spec.containers[0].resources.limits.memory
+
+    - step: create-service
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: service
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: Service
+                    metadata:
+                      namespace: book-app
+                    spec:
+                      type: ClusterIP
+                      selector: {}
+                      ports:
+                        - port: 8080
+                          targetPort: 8080
+                          protocol: TCP
+                          name: http
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.metadata.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.spec.selector["app"]
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.port
+                toFieldPath: spec.forProvider.manifest.spec.ports[0].port
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.port
+                toFieldPath: spec.forProvider.manifest.spec.ports[0].targetPort
+
+    - step: create-database
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: database-pvc
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: PersistentVolumeClaim
+                    metadata:
+                      namespace: book-app
+                    spec:
+                      accessModes:
+                        - ReadWriteOnce
+                      resources:
+                        requests:
+                          storage: 20Gi
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.serviceName
+                toFieldPath: spec.forProvider.manifest.metadata.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s-db-pvc"
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.database.storageClass
+                toFieldPath: spec.forProvider.manifest.spec.storageClassName
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.database.sizeGb
+                toFieldPath: spec.forProvider.manifest.spec.resources.requests.storage
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%dGi"

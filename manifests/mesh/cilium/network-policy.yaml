@@ -1,0 +1,113 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: book-app-policy
+  namespace: book-app
+spec:
+  description: "Allow traffic flow for book-app services"
+  endpointSelector:
+    matchLabels:
+      app: api-gateway
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: frontend
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: product-service
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app: order-service
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+    - toEntities:
+        - kube-apiserver
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: product-service-policy
+  namespace: book-app
+spec:
+  description: "Allow traffic to product-service from api-gateway"
+  endpointSelector:
+    matchLabels:
+      app: product-service
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: api-gateway
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: order-service-policy
+  namespace: book-app
+spec:
+  description: "Allow traffic to order-service from api-gateway"
+  endpointSelector:
+    matchLabels:
+      app: order-service
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app: api-gateway
+      toPorts:
+        - ports:
+            - port: "8082"
+              protocol: TCP
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app: postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP

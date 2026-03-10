@@ -1,0 +1,61 @@
+# Falco Helm values
+# helm install falco falcosecurity/falco \
+#   -n falco-system --create-namespace -f values.yaml
+
+driver:
+  kind: modern_ebpf
+
+falcosidekick:
+  enabled: true
+  config:
+    slack:
+      webhookurl: ""
+      minimumpriority: "warning"
+
+tty: true
+
+falco:
+  grpc:
+    enabled: true
+    bind_address: "unix:///run/falco/falco.sock"
+    threadiness: 8
+  grpc_output:
+    enabled: true
+  json_output: true
+  json_include_output_property: true
+  log_stderr: true
+  log_syslog: true
+  log_level: info
+  priority: debug
+  rules_file:
+    - /etc/falco/falco_rules.yaml
+    - /etc/falco/falco_rules.local.yaml
+    - /etc/falco/rules.d
+
+customRules:
+  book-app-rules.yaml: |-
+    - rule: Unauthorized Process in Book App
+      desc: Detect unauthorized processes running in book-app containers
+      condition: >
+        spawned_process and container and
+        k8s.ns.name = "book-app" and
+        not proc.name in (node, python, java, sh, bash)
+      output: >
+        Unauthorized process started in book-app
+        (user=%user.name command=%proc.cmdline container=%container.name
+        namespace=%k8s.ns.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [book-app, process]
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule

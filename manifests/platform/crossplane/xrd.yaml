@@ -1,0 +1,77 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xmicroservices.platform.book-app.io
+spec:
+  group: platform.book-app.io
+  names:
+    kind: XMicroservice
+    plural: xmicroservices
+  claimNames:
+    kind: Microservice
+    plural: microservices
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - serviceName
+                - image
+              properties:
+                serviceName:
+                  type: string
+                  description: Name of the microservice
+                image:
+                  type: string
+                  description: Container image
+                replicas:
+                  type: integer
+                  default: 2
+                  description: Number of replicas
+                port:
+                  type: integer
+                  default: 8080
+                  description: Service port
+                database:
+                  type: object
+                  description: Database configuration
+                  properties:
+                    enabled:
+                      type: boolean
+                      default: false
+                    sizeGb:
+                      type: integer
+                      default: 20
+                    storageClass:
+                      type: string
+                      default: oci-bv
+                resources:
+                  type: object
+                  properties:
+                    cpuRequest:
+                      type: string
+                      default: 100m
+                    memoryRequest:
+                      type: string
+                      default: 128Mi
+                    cpuLimit:
+                      type: string
+                      default: 500m
+                    memoryLimit:
+                      type: string
+                      default: 256Mi
+            status:
+              type: object
+              properties:
+                deploymentReady:
+                  type: boolean
+                serviceEndpoint:
+                  type: string
+                databaseEndpoint:
+                  type: string

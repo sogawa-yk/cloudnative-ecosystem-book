@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: canary-success-rate
+  namespace: book-app
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      interval: 30s
+      count: 5
+      successCondition: result[0] >= 0.95
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.book-observability:9090
+          query: |
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}", status=~"2.."}[2m]
+            )) /
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}"}[2m]
+            ))
+    - name: latency-p99
+      interval: 30s
+      count: 5
+      successCondition: result[0] <= 500
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.book-observability:9090
+          query: |
+            histogram_quantile(0.99,
+              sum(rate(
+                http_request_duration_seconds_bucket{service="{{args.service-name}}"}[2m]
+              )) by (le)
+            ) * 1000
+    - name: error-rate
+      interval: 30s
+      count: 5
+      successCondition: result[0] <= 0.05
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus-kube-prometheus-prometheus.book-observability:9090
+          query: |
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}", status=~"5.."}[2m]
+            )) /
+            sum(rate(
+              http_requests_total{service="{{args.service-name}}"}[2m]
+            ))

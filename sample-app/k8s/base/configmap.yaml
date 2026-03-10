@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: book-app
+data:
+  PRODUCT_SERVICE_URL: "http://product-service.book-app.svc.cluster.local:8081"
+  ORDER_SERVICE_URL: "http://order-service.book-app.svc.cluster.local:8082"
+  DATABASE_HOST: "postgres.book-app.svc.cluster.local"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "bookapp"
+  DATABASE_USER: "bookapp"
+  DATABASE_PASSWORD: "bookapp"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector.book-observability.svc.cluster.local:4317"

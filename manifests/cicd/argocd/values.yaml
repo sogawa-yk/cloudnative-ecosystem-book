@@ -1,0 +1,68 @@
+# ArgoCD Helm values
+# helm install argocd argo/argo-cd \
+#   -n argocd --create-namespace -f values.yaml
+
+global:
+  domain: argocd.example.com
+
+configs:
+  params:
+    server.insecure: true
+  cm:
+    application.resourceTrackingMethod: annotation
+    resource.exclusions: |
+      - apiGroups:
+          - tekton.dev
+        clusters:
+          - '*'
+        kinds:
+          - TaskRun
+          - PipelineRun
+
+server:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - argocd.example.com
+
+controller:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+repoServer:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+applicationSet:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+notifications:
+  enabled: true

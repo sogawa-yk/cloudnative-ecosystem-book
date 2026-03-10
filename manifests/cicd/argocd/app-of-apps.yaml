@@ -1,0 +1,90 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: book-app-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cloudnative-book/cloudnative-ecosystem-book.git
+    targetRevision: main
+    path: manifests/cicd/argocd/apps
+    directory:
+      recurse: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+# Child applications managed by the App of Apps pattern
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: book-app-workloads
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: book-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cloudnative-book/cloudnative-ecosystem-book.git
+    targetRevision: main
+    path: sample-app/k8s/overlays/oke
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: book-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: book-app-observability
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: book-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cloudnative-book/cloudnative-ecosystem-book.git
+    targetRevision: main
+    path: manifests/observability
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: book-observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: book-app-security
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: book-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cloudnative-book/cloudnative-ecosystem-book.git
+    targetRevision: main
+    path: manifests/security
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: book-app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
