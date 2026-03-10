@@ -1,12 +1,13 @@
-FROM golang:1.22-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 go build -o /api-gateway .
+FROM python:3.12-slim
 
-FROM gcr.io/distroless/static:nonroot
-COPY --from=builder /api-gateway /api-gateway
-USER nonroot:nonroot
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+USER nobody:nogroup
 EXPOSE 8080
-ENTRYPOINT ["/api-gateway"]
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "warning"]
