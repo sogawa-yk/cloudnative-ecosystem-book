@@ -4,23 +4,21 @@ metadata:
   name: book-app-ingress
   namespace: book-app
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    service.beta.kubernetes.io/oci-load-balancer-shape: "flexible"
-    service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
-    service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
-    service.beta.kubernetes.io/oci-load-balancer-backend-protocol: "HTTP"
+    nginx.ingress.kubernetes.io/rewrite-target: null
+    oci-native-ingress.oraclecloud.com/backend-tls-enabled: "false"
+    oci-native-ingress.oraclecloud.com/healthcheck-path: "/health"
+    oci-native-ingress.oraclecloud.com/healthcheck-protocol: "HTTP"
+    oci-native-ingress.oraclecloud.com/https-listener-port: "443"
 spec:
+  ingressClassName: mcp-ingress-class
+  tls:
+    - hosts:
+        - book-app.sogawa-yk.com
+      secretName: wildcard-tls-secret
   rules:
-    - host: book-app.example.com
+    - host: book-app.sogawa-yk.com
       http:
         paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend
-                port:
-                  number: 80
           - path: /api
             pathType: Prefix
             backend:
@@ -28,3 +26,10 @@ spec:
                 name: api-gateway
                 port:
                   number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
